@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -12,34 +12,32 @@
 **
 *****************************************************************************/
 
-#ifndef __FRMOpenSubtitlesCONFIG__H__
-#define __FRMOpenSubtitlesCONFIG__H__
+#ifndef __FRMOPENSUBTITLESCONFIG__H__
+#define __FRMOPENSUBTITLESCONFIG__H__
 
 #include <QDialog>
+#include "config/engineconfig.h"
 
 #include "ui_frmopensubtitlesconfig.h"
 
-class frmOpenSubtitlesConfig : public QDialog
-{
-Q_OBJECT
+class frmOpenSubtitlesConfig : public QDialog {
+  Q_OBJECT
 
-    public:
+ public:
+  frmOpenSubtitlesConfig(const EngineConfig &config, QWidget *parent = 0,
+                         Qt::WindowFlags f = 0);
+  ~frmOpenSubtitlesConfig() {}
 
-        frmOpenSubtitlesConfig(QWidget *parent = 0, Qt::WindowFlags f = 0);
-        ~frmOpenSubtitlesConfig() {}
+  EngineConfig getConfig() const;
 
-    public slots:
-    
-        void accept();
-        void pbRegisterClicked();
+ public slots:
 
-    private:
-        Ui::frmOpenSubtitlesConfig ui;
-        
-        void load();
-        
+  void accept();
+  void pbRegisterClicked();
+
+ private:
+  Ui::frmOpenSubtitlesConfig ui;
+  EngineConfig config;
 };
-
-
 
 #endif

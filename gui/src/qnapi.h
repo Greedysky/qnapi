@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,97 +15,64 @@
 #ifndef __QNAPI__H__
 #define __QNAPI__H__
 
-#include <QtCore>
+#include "config/qnapiconfig.h"
+#include "engines/subtitledownloadengine.h"
+#include "engines/subtitledownloadenginesregistry.h"
+#include "subtitleinfo.h"
 
-#include "engines/qnapiabstractengine.h"
-#include "qnapisubtitleinfo.h"
+#include <Maybe.h>
+#include <QList>
+#include <QSharedPointer>
+#include <QString>
+#include <QStringList>
 
-// globalny menedzer pobierania napisow
-class QNapi
-{
-    public:
+class QNapi {
+ public:
+  QNapi(const QNapiConfig& config,
+        const Maybe<QString>& specificEngine = nothing());
+  ~QNapi();
 
-        QNapi() {}
-        ~QNapi();
+  bool checkP7ZipPath();
+  bool checkTmpPath();
+  bool ppEnabled();
 
-        // sprawdza sciezke do 7zipa
-        static bool checkP7ZipPath();
-        // sprawdza katalog plikow tymczasowych
-        static bool checkTmpPath();
-        // sprawdza czy wlaczone jest przetwarzanie napisow
-        static bool ppEnabled();
+  void setMoviePath(QString path);
+  QString moviePath();
+  bool checkWritePermissions();
 
-        // listuje dostępne silniki pobierania
-        static QStringList enumerateEngines();
-        // wlacza silnik pobierania napisow o podanej nazwie
-        bool addEngine(QString engine);
-        // za jedym zamachem wlacza silniki pobierania napisow o podanych nazwach
-        bool addEngines(QStringList engines);
-        // wywoluje okno konfiguracji silnika
-        void configureEngine(QString engine, QWidget * parent) const;
+  void clearSubtitlesList();
+  void checksum();
+  bool lookForSubtitles(QString lang, QString engine = "");
+  bool lookForSubtitles(QStringList languages, QString engine = "");
+  QList<SubtitleInfo> listSubtitles();
 
-        // ustawia sciezke do pliku z filmem
-        void setMoviePath(QString path);
-        // zwraca sciezke do pliku z filmem
-        QString moviePath();
-        // sprawdza uprawnienia zapisu do katalogu docelowego
-        bool checkWritePermissions();
+  bool needToShowList();
+  int bestIdx();
 
-        void clearSubtitlesList();
-        // oblicza sume kontrolna pliku z filmem
-        void checksum();
-        // szuka napisow w podanym jezyku
-        bool lookForSubtitles(QString lang, QString engine = "");
-        // szuka napisow w podanych jezykach
-        bool lookForSubtitles(QStringList languages, QString engine = "");
-        // zwraca liste znalezionych napisow
-        QList<QNapiSubtitleInfo> listSubtitles();
+  bool download(int i);
+  bool unpack(int i);
+  bool matchSubtitles();
+  void postProcessSubtitles() const;
 
-        // decyduje (na podst. konfiguracji) czy pokazywac liste napisow
-        bool needToShowList();
-        // jesli nie potrzeba pokazywac listy, zwracamy najlepszy indeks napisow
-        int bestIdx();
+  void cleanup();
+  QString error();
 
-        // pobiera napisy o i-tym indeksie z listy subtitlesList
-        bool download(int i);
-        // rozpakowuje pobrane napisy, a sciezke do nich zapisuje w subtitlesTmp
-        bool unpack(int i);
-        // dopasowuje pobrane napisy
-        bool match();
-        // wykonuje przetwarzanie na dopasowanych napisach
-        void pp();
+  QStringList listLoadedEngines() const;
 
-        // czysci rozne smieci i pliki tymczasowe
-        void cleanup();
-        // zwraca komunikat o bledzie, w przypadku niepowodzenia
-        QString error();
+ private:
+  QSharedPointer<SubtitleDownloadEngine> engineByName(QString name) const;
 
-        // zwraca wskaznik do zaladowanego! silnika z napisami po nazwie
-        QNapiAbstractEngine * engineByName(QString name);
-        // na odwrot ;)
-        QString nameByEngine(QNapiAbstractEngine * engine);
+  QString movie;
+  QString errorMsg;
+  QList<QSharedPointer<SubtitleDownloadEngine>> enginesList;
+  QList<SubtitleInfo> subtitlesList;
+  QSharedPointer<SubtitleDownloadEngine> currentEngine;
 
-        // listuje zaladowane moduly pobierania
-        QStringList listLoadedEngines();
+  // najlepszy indeks napisow
+  int theBestIdx;
 
-    private:
-
-        // sciezka do pliku z filmem
-        QString movie;
-        // aktualny komunikat o bledzie
-        QString errorMsg;
-        // lista zaladowanych silnikow z napisami
-        QList<QNapiAbstractEngine*> enginesList;
-        // lista znalezionych napisow
-        QList<QNapiSubtitleInfo> subtitlesList;
-        // wskaznik do obiektu silnika, na ktorym aktualnie pracujemy
-        // ustawiany po wykonaniu metody download()
-        QNapiAbstractEngine * currentEngine;
-        
-        // najlepszy indeks napisow
-        int theBestIdx;
-
+  const QSharedPointer<const SubtitleDownloadEnginesRegistry> enginesRegistry;
+  const QNapiConfig config;
 };
 
-
-#endif // __QNAPI__H__
+#endif  // __QNAPI__H__

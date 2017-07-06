@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,98 +21,102 @@
 
 #include "frmsummary.h"
 
-#include "qnapi.h"
-#include "qnapithread.h"
-#include "qnapiconfig.h"
-#include "qnapiopendialog.h"
+#include "config/qnapiconfig.h"
+
+#include <Maybe.h>
 #include "frmlistsubtitles.h"
-#include "qnapisubtitleinfo.h"
+#include "qnapi.h"
+#include "qnapiopendialog.h"
+#include "qnapithread.h"
+#include "subtitleinfo.h"
 
-class GetThread : public QNapiThread
-{
-Q_OBJECT
+class GetThread : public QNapiThread {
+  Q_OBJECT
 
-    public:
-        GetThread() : langBackupPassed(false)
-        {
-            connect(this, SIGNAL(criticalError(const QString &)),
-                    this, SLOT(setCriticalMessage(const QString &)));            
-        }
+ public:
+  GetThread();
 
-    signals:
-        void fileNameChange(const QString & newfileName);
-        void actionChange(const QString & newAction);
-        void progressChange(int current, int all, float stageProgress);
-        void criticalError(const QString & message);
-        void selectSubtitles(QString fileName, QNapiSubtitleInfoList subtitles);
+ signals:
+  void fileNameChange(const QString &newfileName);
+  void actionChange(const QString &newAction);
+  void progressChange(int current, int all, float stageProgress);
+  void criticalError(const QString &message);
+  void selectSubtitles(QString fileName, SubtitleInfoList subtitles);
 
-    private slots:
-        void setCriticalMessage(const QString & msg)
-        {
-            criticalMessage = msg;
-        }
-        void subtitlesSelected(int idx);
+ private slots:
+  void setCriticalMessage(const QString &msg) { criticalMessage = msg; }
+  void subtitlesSelected(int idx);
 
-    public:
+ public:
+  void setSpecificEngine(Maybe<QString> engine) { specificEngine = engine; }
 
-        void setEngines(QStringList enginesList) { engines = enginesList; }
-        void setLanguages(QString language, QString languageBackup, bool languageBackupPassed){
-            lang = language; langBackup = languageBackup; langBackupPassed = languageBackupPassed;
-        }
-        void run();
+  void setLanguages(QString language, QString languageBackup,
+                    bool languageBackupPassed) {
+    lang = language;
+    langBackup = languageBackup;
+    langBackupPassed = languageBackupPassed;
+  }
+  void setConfig(const QNapiConfig &configuration) { config = configuration; }
 
-        QStringList queue, engines;
-        QList<QNapiSubtitleInfo> subStatusList;
-        QString lang, langBackup;
-        bool langBackupPassed;
-        int napiSuccess, napiFail;
-        QString criticalMessage;
-        QMutex waitForDlg;
-        int selIdx;
+  void run();
+
+  QStringList queue;
+  Maybe<QString> specificEngine;
+  QList<SubtitleInfo> subStatusList;
+  QString lang, langBackup;
+  bool langBackupPassed;
+  int napiSuccess, napiFail;
+  QString criticalMessage;
+  QMutex waitForDlg;
+  int selIdx;
+  QNapiConfig config;
 };
 
-class frmProgress: public QWidget
-{
-    Q_OBJECT
+class frmProgress : public QWidget {
+  Q_OBJECT
 
-    public:
-        frmProgress(QWidget *parent = 0, Qt::WindowFlags f = 0);
+ public:
+  frmProgress(QWidget *parent = 0, Qt::WindowFlags f = 0);
 
-        void setEngines(QStringList enginesList)
-        {
-            getThread.setEngines(enginesList);
-        }
-        void setBatchMode(bool value) { batchMode = value; }
-        void setBatchLanguages(QString lang, QString langBackup, bool langBackupPassed) {
-            getThread.setLanguages(lang, langBackup, langBackupPassed);
-        }
-        bool isBatchMode() { return batchMode; }
+  void clearSpecificEngine() { getThread.setSpecificEngine(nothing()); }
+  void setSpecificEngine(QString engine) {
+    getThread.setSpecificEngine(just(engine));
+  }
 
-    signals:
-        void subtitlesSelected(int idx);
+  void setBatchMode(bool value) { batchMode = value; }
+  void setBatchLanguages(QString lang, QString langBackup,
+                         bool langBackupPassed) {
+    getThread.setLanguages(lang, langBackup, langBackupPassed);
+  }
+  void setTargetFormatOverride(QString value) { targetFormatOverride = value; }
+  void setTargetExtOverride(QString value) { targetExtOverride = value; }
+  bool isBatchMode() { return batchMode; }
 
-    public slots:
-        void receiveRequest(const QString & request);
-        void enqueueFile(const QString &file);
-        void enqueueFiles(const QStringList &fileList);
-        bool download();
-        void updateProgress(int current, int all, float stageProgress);
-        void selectSubtitles(QString fileName, QNapiSubtitleInfoList subtitles);
-        void downloadFinished();
+ signals:
+  void subtitlesSelected(int idx);
 
-    private:
-        void closeEvent(QCloseEvent *event);
-        void dragEnterEvent(QDragEnterEvent *event);
-        void dropEvent(QDropEvent *event);
+ public slots:
+  void receiveRequest(const QString &request);
+  void enqueueFile(const QString &file);
+  void enqueueFiles(const QStringList &fileList);
+  bool download();
+  void updateProgress(int current, int all, float stageProgress);
+  void selectSubtitles(QString fileName, SubtitleInfoList subtitles);
+  void downloadFinished();
 
-        Ui::frmProgress ui;
+ private:
+  void closeEvent(QCloseEvent *event);
+  void dragEnterEvent(QDragEnterEvent *event);
+  void dropEvent(QDropEvent *event);
 
-        GetThread getThread;    
-        frmListSubtitles frmSelect;
-        frmSummary summary;
+  Ui::frmProgress ui;
+  GetThread getThread;
+  frmListSubtitles frmSelect;
+  frmSummary summary;
+  QString targetFormatOverride, targetExtOverride;
 
-        bool batchMode, showSummary, closeRequested;
-        QMutex mutex;
+  bool batchMode, showSummary, closeRequested;
+  QMutex mutex;
 };
 
 #endif

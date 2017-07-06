@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -12,35 +12,35 @@
 **
 *****************************************************************************/
 
-
 #ifndef __FRMLISTSUBTITLES__H__
 #define __FRMLISTSUBTITLES__H__
 
+#include "engines/subtitledownloadenginesregistry.h"
+
+#include "subtitleinfo.h"
+#include "ui_frmlistsubtitles.h"
 
 #include <QDialog>
+#include <QSharedPointer>
 
-#include "ui_frmlistsubtitles.h"
-#include "qnapisubtitleinfo.h"
+class frmListSubtitles : public QDialog {
+  Q_OBJECT
 
-class frmListSubtitles : public QDialog
-{
-Q_OBJECT
+ public:
+  frmListSubtitles(QWidget *parent = 0, Qt::WindowFlags f = 0);
+  ~frmListSubtitles() {}
 
-    public:
+ public slots:
 
-        frmListSubtitles(QWidget *parent = 0, Qt::WindowFlags f = 0);
-        ~frmListSubtitles() {}
+  void setFileName(const QString &name);
+  void setSubtitlesList(QList<SubtitleInfo> list);
+  int getSelectedIndex();
+  void accept();
 
-    public slots:
+ private:
+  Ui::frmListSubtitles ui;
 
-        void setFileName(const QString & name);
-        void setSubtitlesList(QList<QNapiSubtitleInfo> list);
-        int getSelectedIndex();
-        void accept();
-
-    private:
-        Ui::frmListSubtitles ui;
-        
+  QSharedPointer<const SubtitleDownloadEnginesRegistry> enginesRegistry;
 };
 
 #endif

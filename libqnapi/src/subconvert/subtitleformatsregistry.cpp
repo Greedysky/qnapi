@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,42 +19,27 @@
 #include "subconvert/formats/subrip.h"
 #include "subconvert/formats/tmplayer.h"
 
-SubtitleFormatsRegistry::SubtitleFormatsRegistry()
-{}
-
-SubtitleFormatsRegistry::~SubtitleFormatsRegistry()
-{
-    foreach(QString formatName, formats.keys())
-    {
-        delete formats[formatName];
-    }
+SubtitleFormatsRegistry::SubtitleFormatsRegistry() {
+  registerFormat(new MicroDVDSubtitleFormat);
+  registerFormat(new MPL2SubtitleFormat);
+  registerFormat(new SubRipSubtitleFormat);
+  registerFormat(new TMPlayerSubtitleFormat);
 }
 
-void SubtitleFormatsRegistry::registerFormat(SubtitleFormat *format)
-{
-    formats.insert(format->formatName(), format);
+QStringList SubtitleFormatsRegistry::listFormatNames() const {
+  QStringList formatNames;
+  foreach (QString format, formats.keys()) {
+    formatNames << select(format)->formatName();
+  }
+  return formatNames;
 }
 
-QStringList SubtitleFormatsRegistry::enumerateFormats() const
-{
-    return formats.keys();
+QSharedPointer<const SubtitleFormat> SubtitleFormatsRegistry::select(
+    const QString &format) const {
+  return formats.value(format.toLower(), QSharedPointer<SubtitleFormat>(0));
 }
 
-SubtitleFormat* SubtitleFormatsRegistry::select(const QString & format) const
-{
-    return formats.value(format, 0);
-}
-
-
-SubtitleFormatsRegistry & GlobalFormatsRegistry()
-{
-    static SubtitleFormatsRegistry registry;
-    if(registry.enumerateFormats().isEmpty())
-    {
-        registry.registerFormat(new MicroDVDSubtitleFormat);
-        registry.registerFormat(new MPL2SubtitleFormat);
-        registry.registerFormat(new SubRipSubtitleFormat);
-        registry.registerFormat(new TMPlayerSubtitleFormat);
-    }
-    return registry;
+void SubtitleFormatsRegistry::registerFormat(SubtitleFormat *format) {
+  formats.insert(format->formatName().toLower(),
+                 QSharedPointer<SubtitleFormat>(format));
 }

@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,32 +16,28 @@
 #define __FRMNAPIPROJEKTCONFIG__H__
 
 #include <QDialog>
+#include "config/engineconfig.h"
+
 #include "ui_frmnapiprojektconfig.h"
 
-#include "qnapiconfig.h"
-#include "qnapiapp.h"
+class frmNapiProjektConfig : public QDialog {
+  Q_OBJECT
 
-class frmNapiProjektConfig : public QDialog
-{
-Q_OBJECT
+ public:
+  frmNapiProjektConfig(const EngineConfig &config, QWidget *parent = 0,
+                       Qt::WindowFlags f = 0);
+  ~frmNapiProjektConfig() {}
 
-    public:
+  EngineConfig getConfig() const;
 
-        frmNapiProjektConfig(QWidget *parent = 0, Qt::WindowFlags f = 0);
-        ~frmNapiProjektConfig() {}
+ public slots:
 
-    public slots:
-    
-        void accept();
-        void pbRegisterClicked();
+  void accept();
+  void pbRegisterClicked();
 
-    private:
-        Ui::frmNapiProjektConfig ui;
-        
-        void load();
-        
+ private:
+  Ui::frmNapiProjektConfig ui;
+  EngineConfig config;
 };
-
-
 
 #endif

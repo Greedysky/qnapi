@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -13,68 +13,69 @@
 *****************************************************************************/
 
 #include "frmsummary.h"
-#include "qnapi.h"
+#include "libqnapi.h"
 
 #include "subdatawidget.h"
 
-frmSummary::frmSummary(QWidget * parent, Qt::WindowFlags f) : QDialog(parent, f)
-{
-    ui.setupUi(this);
+#include <QDesktopWidget>
+#include <QListWidget>
 
-    setAttribute(Qt::WA_QuitOnClose, false);
+frmSummary::frmSummary(QWidget *parent, Qt::WindowFlags f)
+    : QDialog(parent, f) {
+  ui.setupUi(this);
 
-    QRect position = frameGeometry();
-    position.moveCenter(QDesktopWidget().availableGeometry().center());
-    move(position.topLeft());
+  setAttribute(Qt::WA_QuitOnClose, false);
+
+  QRect position = frameGeometry();
+  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  move(position.topLeft());
 }
 
-void frmSummary::setSummaryList(QList<QNapiSubtitleInfo> list)
-{
-    std::sort(list.begin(), list.end());
+void frmSummary::setSummaryList(QList<SubtitleInfo> list) {
+  std::sort(list.begin(), list.end());
 
-    QNapi n;
-    n.addEngines(n.enumerateEngines());
+  QIcon succIcon(":/ui/accept.png"), failIcon(":/ui/exclamation.png");
 
-    QIcon succIcon(":/ui/accept.png"), failIcon(":/ui/exclamation.png");
+  ui.lwSummary->clear();
+  ui.lwSummary->setFocusPolicy(Qt::NoFocus);
 
-    ui.lwSummary->clear();
-    ui.lwSummary->setFocusPolicy(Qt::NoFocus);
+  int i = 0, goodCount = 0, badCount = 0;
+  foreach (SubtitleInfo s, list) {
+    bool isGood = s.resolution != SUBTITLE_NONE;
 
-    int i = 0, goodCount = 0, badCount = 0;
-    foreach(QNapiSubtitleInfo s, list)
-    {
-        bool isGood = s.resolution != SUBTITLE_NONE;
+    QListWidgetItem *listItem = new QListWidgetItem();
 
-        QNapiAbstractEngine *e = n.engineByName(s.engine);
-        QListWidgetItem *listItem = new QListWidgetItem();
+    ui.lwSummary->addItem(listItem);
 
-        ui.lwSummary->addItem(listItem);
+    subDataWidget *subData = new subDataWidget();
 
-        subDataWidget *subData = new subDataWidget();
-
-        if(isGood) {
-            ++goodCount;
-            QString lang_path = QString(":/languages/") + s.lang + ".png";
-            subData->setSubData(succIcon, s.name, QIcon(lang_path), QIcon(QPixmap(e->enginePixmapData())));
-        } else {
-            ++badCount;
-            subData->setSubData(failIcon, s.name);
-        }
-
-        ui.lwSummary->setItemWidget(listItem, subData);
-        listItem->setSizeHint(subData->sizeHint());
-
-        ++i;
+    if (isGood) {
+      ++goodCount;
+      QString lang_path = QString(":/languages/") + s.lang + ".png";
+      QIcon engineIcon =
+          QIcon(QPixmap(enginesRegistry->enginePixmapData(s.engine)));
+      subData->setSubData(succIcon, s.name, QIcon(lang_path), engineIcon);
+    } else {
+      ++badCount;
+      subData->setSubData(failIcon, s.name);
     }
 
-    ui.lwSummary->setMinimumWidth(ui.lwSummary->sizeHintForColumn(0) + 20);
-    this->adjustSize();
+    ui.lwSummary->setItemWidget(listItem, subData);
+    listItem->setSizeHint(subData->sizeHint());
 
-    ui.lbSuccess->setVisible(goodCount != 0);
-    ui.lbFail->setVisible(badCount != 0);
+    ++i;
+  }
 
-    ui.lbSuccess->setText(tr("Pobrano napisy dla %1 %2")
-        .arg(goodCount).arg(tr(goodCount > 1 ? "plików" : "pliku")));
-    ui.lbFail->setText(tr("Nie pobrano napisów dla %1 %2")
-        .arg(badCount).arg(tr(badCount > 1 ? "plików" : "pliku")));
+  ui.lwSummary->setMinimumWidth(ui.lwSummary->sizeHintForColumn(0) + 20);
+  this->adjustSize();
+
+  ui.lbSuccess->setVisible(goodCount != 0);
+  ui.lbFail->setVisible(badCount != 0);
+
+  ui.lbSuccess->setText(tr("Subtitles downloaded for %1 %2")
+                            .arg(goodCount)
+                            .arg(goodCount > 1 ? tr("files") : tr("file")));
+  ui.lbFail->setText(tr("Could not download subtitles for %1 %2")
+                         .arg(badCount)
+                         .arg(badCount > 1 ? tr("files") : tr("file")));
 }

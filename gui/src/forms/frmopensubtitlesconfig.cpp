@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -12,43 +12,44 @@
 **
 *****************************************************************************/
 
+#include <QDesktopServices>
+#include <QDesktopWidget>
+
+#include "engines/opensubtitlesdownloadengine.h"
 #include "frmopensubtitlesconfig.h"
-#include "qnapi.h"
-#include "qnapiconfig.h"
-#include "qnapiapp.h"
 
+frmOpenSubtitlesConfig::frmOpenSubtitlesConfig(const EngineConfig &config,
+                                               QWidget *parent,
+                                               Qt::WindowFlags f)
+    : QDialog(parent, f), config(config) {
+  ui.setupUi(this);
 
-frmOpenSubtitlesConfig::frmOpenSubtitlesConfig(QWidget *parent, Qt::WindowFlags f)
-    : QDialog(parent, f)
-{
-    ui.setupUi(this);
-    QNapi q;
-    q.addEngines(q.enumerateEngines());
-    setWindowIcon(QIcon(QPixmap(q.engineByName("OpenSubtitles")->enginePixmapData())));
+  ui.leNick->setText(config.nick());
+  ui.lePass->setText(config.password());
 
-    load();
+  QIcon openSubtitlesIcon =
+      QIcon(QPixmap(OpenSubtitlesDownloadEngine::pixmapData));
+  setWindowIcon(openSubtitlesIcon);
 
-    connect(ui.pbRegister, SIGNAL(clicked()), this, SLOT(pbRegisterClicked()));
+  connect(ui.pbRegister, SIGNAL(clicked()), this, SLOT(pbRegisterClicked()));
 
-    QRect position = frameGeometry();
-    position.moveCenter(QDesktopWidget().availableGeometry().center());
-    move(position.topLeft());
+  QRect position = frameGeometry();
+  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  move(position.topLeft());
 }
 
-void frmOpenSubtitlesConfig::accept()
-{
-    GlobalConfig().setNick("OpenSubtitles", ui.leNick->text());
-    GlobalConfig().setPass("OpenSubtitles", ui.lePass->text());
-    QDialog::accept();
+EngineConfig frmOpenSubtitlesConfig::getConfig() const { return config; }
+
+void frmOpenSubtitlesConfig::accept() {
+  config = config.setNick(ui.leNick->text()).setPassword(ui.lePass->text());
+  QDialog::accept();
 }
 
-void frmOpenSubtitlesConfig::pbRegisterClicked()
-{
-    ((QNapiApp*)qApp)->showCreateAccount("OpenSubtitles");
-}
+void frmOpenSubtitlesConfig::pbRegisterClicked() {
+  Maybe<QUrl> maybeRegistrationUrl =
+      OpenSubtitlesDownloadEngine::metadata.registrationUrl();
 
-void frmOpenSubtitlesConfig::load()
-{
-    ui.leNick->setText(GlobalConfig().nick("OpenSubtitles"));
-    ui.lePass->setText(GlobalConfig().pass("OpenSubtitles"));
+  if (maybeRegistrationUrl) {
+    QDesktopServices::openUrl(maybeRegistrationUrl.value());
+  }
 }

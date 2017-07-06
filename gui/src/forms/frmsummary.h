@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,27 +15,27 @@
 #ifndef __FRMSUMMARY__H__
 #define __FRMSUMMARY__H__
 
-#include <QDesktopWidget>
-#include <QListWidget>
-#include <QFileInfo>
-#include <QtCore>
+#include "engines/subtitledownloadenginesregistry.h"
 
-#include "qnapiconfig.h"
-
+#include "subtitleinfo.h"
 #include "ui_frmsummary.h"
-#include "qnapisubtitleinfo.h"
 
-class frmSummary: public QDialog
-{
-Q_OBJECT
-    public:
-        frmSummary(QWidget *parent = 0, Qt::WindowFlags f = 0);
-        ~frmSummary() {}
+#include <QList>
+#include <QSharedPointer>
+#include <QWidget>
 
-        void setSummaryList(QList<QNapiSubtitleInfo> list);
+class frmSummary : public QDialog {
+  Q_OBJECT
+ public:
+  frmSummary(QWidget *parent = 0, Qt::WindowFlags f = 0);
+  ~frmSummary() {}
 
-    private:
-        Ui::frmSummary ui;
+  void setSummaryList(QList<SubtitleInfo> list);
+
+ private:
+  Ui::frmSummary ui;
+
+  QSharedPointer<const SubtitleDownloadEnginesRegistry> enginesRegistry;
 };
 
 #endif

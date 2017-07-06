@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 #ifndef __VERSION__H__
 #define __VERSION__H__
 
-#define QNAPI_VERSION "0.2.3"
-#define QNAPI_DISPLAYABLE_VERSION "0.2.3-snapshot"
+#define QNAPI_VERSION "0.2.4"
+#define QNAPI_DISPLAYABLE_VERSION "0.2.4-snapshot"
 #define QNAPI_URL "http://qnapi.github.io"
 
 #endif

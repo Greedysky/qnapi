@@ -1,6 +1,6 @@
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,81 +15,80 @@
 #ifndef __QNAPIAPP__H__
 #define __QNAPIAPP__H__
 
-#include <QApplication>
-#include <QString>
-#include <QEvent>
-#include <QFileOpenEvent>
-#include <QMenu>
-#include <QAction>
-#include <QSystemTrayIcon>
-#include <QDesktopServices>
-#include <QDateTime>
+#include "engines/subtitledownloadenginesregistry.h"
+
+#include "qnapiopendialog.h"
+
+#include "forms/frmabout.h"
+#include "forms/frmconvert.h"
+#include "forms/frmoptions.h"
+#include "forms/frmprogress.h"
+#include "forms/frmscan.h"
+#include "forms/frmsummary.h"
 
 #include "qcumber/qsingleapplication.h"
 
-#include "forms/frmprogress.h"
-#include "forms/frmabout.h"
-#include "forms/frmoptions.h"
-#include "forms/frmscan.h"
-#include "forms/frmsummary.h"
-#include "forms/frmconvert.h"
+#include <QAction>
+#include <QApplication>
+#include <QDateTime>
+#include <QDesktopServices>
+#include <QEvent>
+#include <QFileOpenEvent>
+#include <QMenu>
+#include <QSharedPointer>
+#include <QString>
+#include <QSystemTrayIcon>
 
-#include "qnapiconfig.h"
-#include "qnapiopendialog.h"
+class QNapiApp : public QSingleApplication {
+  Q_OBJECT
+ public:
+  QNapiApp(int &argc, char **argv, bool useGui, const QString &appName);
+  ~QNapiApp();
 
+  void createTrayIcon();
+  void showTrayMessage(QString title, QString msg);
 
-class QNapiApp : public QSingleApplication
-{
-    Q_OBJECT
-    public:
-        QNapiApp(int & argc, char **argv, bool useGui, const QString & appName);
-        ~QNapiApp();
+  frmProgress *progress();
 
-        void createTrayIcon();
-        void showTrayMessage(QString title, QString msg);
+ public slots:
 
-        frmProgress * progress();
+  bool showOpenDialog(QString engine = "");
+  bool showScanDialog(QString init_dir = "");
+  void showConvertDialog();
+  void showCreateAccount(const QString &engineName) const;
+  void showOSUploadDialog() const;
+  void showSettings();
+  void showAbout();
+  void tryQuit();
 
-    public slots:
+ signals:
+  void downloadFile(const QString &fileName);
 
-        bool showOpenDialog(QString engine = "");
-        bool showScanDialog(QString init_dir = "");
-        void showConvertDialog();
-        void showCreateAccount(QString engine);
-        void showOSUploadDialog();
-        void showSettings();
-        void showAbout();
-        void tryQuit();
+ private:
+  bool event(QEvent *ev);
 
-    signals:
-        void downloadFile(const QString & fileName);
+  QSystemTrayIcon *trayIcon;
+  QMenu *trayIconMenu, *napiSubMenu, *osSubMenu, *napisy24SubMenu;
+  QAction *getAction, *scanAction, *convertAction, *napiGetAction,
+      *napiCreateUserAction, *osGetAction, *osAddAction, *osCreateUserAction,
+      *napisy24GetAction, *napisy24CreateUserAction, *settingsAction,
+      *aboutAction, *quitAction;
 
-    private:
+  QNapiOpenDialog *openDialog;
 
-        bool event(QEvent *ev);
+  frmProgress *f_progress;
+  frmOptions *f_options;
+  frmAbout *f_about;
+  frmScan *f_scan;
+  frmConvert *f_convert;
 
-        QSystemTrayIcon *trayIcon;
-        QMenu *trayIconMenu, *napiSubMenu, *osSubMenu, *napisy24SubMenu;
-        QAction *getAction, *scanAction, *convertAction, *napiGetAction,
-                *napiCreateUserAction, *osGetAction, *osAddAction,
-                *osCreateUserAction, *napisy24GetAction,
-                *napisy24CreateUserAction, *settingsAction,
-                *aboutAction, *quitAction;
+  QDateTime creationDT;
 
-        QNapiOpenDialog *openDialog;
-        
-        frmProgress *f_progress;
-        frmOptions *f_options;
-        frmAbout *f_about;
-        frmScan *f_scan;
-        frmConvert *f_convert;
+  QSharedPointer<const SubtitleDownloadEnginesRegistry> enginesRegistry;
 
-        QDateTime creationDT;
+ private slots:
 
-    private slots:
-
-        void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-
+  void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 };
 
 #endif

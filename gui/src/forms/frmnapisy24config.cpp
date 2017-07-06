@@ -1,7 +1,6 @@
-
 /*****************************************************************************
 ** QNapi
-** Copyright (C) 2008-2015 Piotr Krzemiński <pio.krzeminski@gmail.com>
+** Copyright (C) 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -13,40 +12,42 @@
 **
 *****************************************************************************/
 
+#include <QDesktopServices>
+#include <QDesktopWidget>
+
+#include "engines/napisy24downloadengine.h"
 #include "frmnapisy24config.h"
-#include "../qnapi.h"
 
-frmNapisy24Config::frmNapisy24Config(QWidget *parent, Qt::WindowFlags f)
-    : QDialog(parent, f)
-{
-    ui.setupUi(this);
-    QNapi q;
-    q.addEngines(q.enumerateEngines());
-    setWindowIcon(QIcon(QPixmap(q.engineByName("Napisy24")->enginePixmapData())));
+frmNapisy24Config::frmNapisy24Config(const EngineConfig &config,
+                                     QWidget *parent, Qt::WindowFlags f)
+    : QDialog(parent, f), config(config) {
+  ui.setupUi(this);
 
-    load();
+  ui.leNick->setText(config.nick());
+  ui.lePass->setText(config.password());
 
-    connect(ui.pbRegister, SIGNAL(clicked()), this, SLOT(pbRegisterClicked()));
+  QIcon napisy24Icon = QIcon(QPixmap(Napisy24DownloadEngine::pixmapData));
+  setWindowIcon(napisy24Icon);
 
-    QRect position = frameGeometry();
-    position.moveCenter(QDesktopWidget().availableGeometry().center());
-    move(position.topLeft());
+  connect(ui.pbRegister, SIGNAL(clicked()), this, SLOT(pbRegisterClicked()));
+
+  QRect position = frameGeometry();
+  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  move(position.topLeft());
 }
 
-void frmNapisy24Config::accept()
-{
-    GlobalConfig().setNick("Napisy24", ui.leNick->text());
-    GlobalConfig().setPass("Napisy24", ui.lePass->text());
-    QDialog::accept();
+EngineConfig frmNapisy24Config::getConfig() const { return config; }
+
+void frmNapisy24Config::accept() {
+  config = config.setNick(ui.leNick->text()).setPassword(ui.lePass->text());
+  QDialog::accept();
 }
 
-void frmNapisy24Config::pbRegisterClicked()
-{
-    ((QNapiApp*)qApp)->showCreateAccount("Napisy24");
-}
+void frmNapisy24Config::pbRegisterClicked() {
+  Maybe<QUrl> maybeRegistrationUrl =
+      Napisy24DownloadEngine::metadata.registrationUrl();
 
-void frmNapisy24Config::load()
-{
-    ui.leNick->setText(GlobalConfig().nick("Napisy24"));
-    ui.lePass->setText(GlobalConfig().pass("Napisy24"));
+  if (maybeRegistrationUrl) {
+    QDesktopServices::openUrl(maybeRegistrationUrl.value());
+  }
 }

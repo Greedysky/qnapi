@@ -1,4 +1,4 @@
-# QNapi [![Build Status](https://travis-ci.org/QNapi/qnapi.svg?branch=master)](https://travis-ci.org/QNapi/qnapi) [![Build status](https://ci.appveyor.com/api/projects/status/mdebep2uhrc3oagq/branch/master?svg=true)](https://ci.appveyor.com/project/krzemin/qnapi/branch/master)
+# QNapi [![Build Status](https://travis-ci.org/QNapi/qnapi.svg?branch=master)](https://travis-ci.org/QNapi/qnapi) [![Build status](https://ci.appveyor.com/api/projects/status/mdebep2uhrc3oagq/branch/master?svg=true)](https://ci.appveyor.com/project/krzemin/qnapi/branch/master) [![GitHub release](https://img.shields.io/github/release/QNapi/qnapi.svg)](https://github.com/QNapi/qnapi/releases) [![Github All Releases](https://img.shields.io/github/downloads/QNapi/qnapi/total.svg)](https://qnapi.github.io/#download)
 
 QNapi is free software for automatic fetching subtitles for given movie file.
 It uses online databases such as NapiProjekt, OpenSubtitles and Napisy24.
@@ -14,7 +14,7 @@ Latest binary packages are available at http://qnapi.github.io/#download
 #### Prerequisites
 
 * C++ compiler with c++11 support installed (`clang++`, `g++` or *MinGW* for Windows), present in `PATH`
-* Qt 5.1+ (most recent 5.x recommended) installed with `qmake` present in `PATH` (you can find one at http://www.qt.io/download-open-source/)
+* Qt 5.2+ (most recent 5.x recommended) installed with `qmake` present in `PATH` (you can find one at http://www.qt.io/download-open-source/)
 
 #### Binary prerequisites
 
