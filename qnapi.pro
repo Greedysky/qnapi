@@ -2,15 +2,21 @@ TEMPLATE = subdirs
 
 CONFIG += ordered
 
-SUBDIRS = libqnapi gui
+SUBDIRS = libqnapi cli gui
+
+no_cli:message(will skip building qnapic cli application)
+no_cli:SUBDIRS -= cli
+
+no_gui:message(will skip building qnapi gui application)
+no_gui:SUBDIRS -= gui
 
 TRANSLATIONS += translations/qnapi_it.ts translations/qnapi_pl.ts
 
+include(qnapi.pri)
+
 unix {
-    INSTALL_PREFIX = /usr
     DATADIR=$${INSTALL_PREFIX}/share
-    target.files += qnapi
-    target.path = $${INSTALL_PREFIX}/bin
+
     doc.path = $${INSTALL_PREFIX}/share/doc/qnapi
     doc.files = doc/ChangeLog \
         doc/LICENSE \
@@ -40,10 +46,10 @@ unix {
 
     desktop.path = $${INSTALL_PREFIX}/share/applications
     desktop.files = doc/qnapi.desktop
-    INSTALLS += target doc man man_it man_pl desktop
+    INSTALLS += doc man man_it man_pl desktop
 }
 
-macx {
+macx:!no_gui {
     macdeploy.commands = macdeployqt macx/QNapi.app
     appdmg.depends = macdeploy
     appdmg.commands = appdmg macx/appdmg.json macx/QNapi.dmg
@@ -52,8 +58,6 @@ macx {
 }
 
 win32 {
-    INSTALL_PREFIX = win32/out
-
     QMAKE_STRIP = echo
 
     p7zip.files = win32/content/7za.exe
@@ -72,7 +76,10 @@ win32 {
     libmediainfodlls.files += deps/libmediainfo/bin/MediaInfo.dll
     libmediainfodlls.path = $${INSTALL_PREFIX}
 
-    deploywin.commands = windeployqt --no-translations --no-quick-import --no-system-d3d-compiler --no-angle --no-webkit --no-webkit2 win32/out/qnapi.exe
+    DEPLOYWIN_FLAGS = --no-translations --no-quick-import --no-system-d3d-compiler --no-angle --no-webkit --no-webkit2
+    deploywin.commands += windeployqt $${DEPLOYWIN_FLAGS}
+    !no_cli:deploywin.commands += $${INSTALL_PREFIX}/qnapic.exe
+    !no_gui:deploywin.commands += $${INSTALL_PREFIX}/qnapi.exe
 
     platform.files = $$[QT_INSTALL_PLUGINS]/platforms/qwindows.dll
     platform.path = $${INSTALL_PREFIX}/platforms

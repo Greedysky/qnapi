@@ -48,6 +48,17 @@ const QNapiConfig ConfigReader::readConfig(const QSettings& settings) const {
                      settings.value("qnapi/last_opened_dir", "").toString());
 }
 
+QVariant ConfigReader::firstValid(std::initializer_list<QVariant> list)
+{
+    for (const auto& v : list) {
+        if (v.isValid()) {
+            return v;
+        }
+    }
+
+    return QVariant();
+}
+
 const GeneralConfig ConfigReader::readGeneralConfig(
     const QSettings& settings) const {
   QString sysLangCode = QLocale::system().name().left(2);
@@ -134,10 +145,11 @@ const PostProcessingConfig ConfigReader::readPostProcessingConfig(
       settings.value("qnapi/sub_ext", "").toString(),
       settings.value("qnapi/skip_convert_ads", false).toBool(),
       settings.value("qnapi/remove_lines", false).toBool(),
-      settings
-          .value("qnapi/remove_words", QStringList() << "movie info"
-                                                     << "synchro")
-          .toStringList());
+      firstValid({
+                     settings.value("qnapi/remove_lines_words"),
+                     settings.value("qnapi/remove_words"), // Legacy setting
+                     QStringList({ "movie info", "synchro" })
+                 }).toStringList());
 }
 
 const ScanConfig ConfigReader::readScanConfig(const QSettings& settings) const {
@@ -155,12 +167,10 @@ const GeneralConfig ConfigReader::resolveP7zipPath(
   } else {
     QString p7zipPath = "";
 
-#if defined(Q_OS_MAC)
-    p7zipPath =
-        QFileInfo(appExecutableDir + "/../Resources/7za").absoluteFilePath();
-#elif defined(Q_OS_WIN)
+#ifdef Q_OS_WIN
     p7zipPath = QFileInfo(appExecutableDir + "/7za.exe").absoluteFilePath();
 #else
+
     QString pathEnv =
         QProcess::systemEnvironment().filter(QRegExp("^PATH=(.*)$")).value(0);
     QStringList sysPaths = pathEnv.mid(5).split(":");
@@ -174,6 +184,10 @@ const GeneralConfig ConfigReader::resolveP7zipPath(
     }
 
     sysPaths << appExecutableDir;
+
+#ifdef Q_OS_MAC
+    sysPaths << QFileInfo(appExecutableDir + "/../Resources/").absolutePath();
+#endif
 
     QStringList p7zipBinaries = {"7z", "7za"};
 
